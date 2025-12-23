@@ -1,1 +1,229 @@
-bbb
+name: Download and Organize Images from Unsplash
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  download-images: 
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses:  actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+      
+      - name:  Create directory structure
+        run: |
+          mkdir -p images/properties
+          mkdir -p images/locations
+          mkdir -p images/pages
+          mkdir -p images/testimonials
+      
+      - name:  Download images from Unsplash
+        env:
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
+        run: |
+          python << 'EOF'
+          import os
+          import requests
+          import time
+          import sys
+
+          # Get Unsplash API key
+          api_key = os.environ.get('UNSPLASH_ACCESS_KEY')
+          if not api_key: 
+              print("Error: UNSPLASH_ACCESS_KEY not found in secrets")
+              sys.exit(1)
+
+          # Define all images with their paths and search terms
+          images = {
+              # Properties (12 images)
+              'images/properties/barcelona-penthouse-luxury.jpg': 'luxury penthouse barcelona architecture interior design terrace',
+              'images/properties/barcelona-apartment-modern.jpg': 'modern apartment barcelona interior minimalist luxury',
+              'images/properties/barcelona-villa-contemporary.jpg':  'contemporary villa barcelona pool garden architecture',
+              'images/properties/barcelona-beach-penthouse.jpg': 'luxury beach penthouse barcelona sea view balcony',
+              'images/properties/barcelona-apartment-sarria.jpg': 'luxury apartment sarria barcelona residential neighborhood',
+              'images/properties/barcelona-loft-poblenou. jpg': 'modern loft poblenou barcelona industrial style interior',
+              'images/properties/barcelona-townhouse-gracia.jpg':  'luxury townhouse gracia barcelona facade street view',
+              'images/properties/sitges-estate-luxury.jpg': 'luxury estate sitges mediterranean villa sea view',
+              'images/properties/madrid-apartment-salamanca.jpg': 'luxury apartment salamanca madrid interior classic elegant',
+              'images/properties/marbella-villa-beachfront.jpg': 'beachfront villa marbella golden mile luxury pool',
+              'images/properties/valencia-penthouse-seafront.jpg': 'seafront penthouse valencia luxury terrace mediterranean view',
+              'images/properties/ibiza-villa-luxury.jpg': 'luxury villa ibiza modern architecture pool night view',
+              
+              # Locations (22 images)
+              'images/locations/barcelona-eixample.jpg':  'barcelona eixample architecture aerial street grid',
+              'images/locations/barcelona-gracia.jpg': 'gracia neighborhood barcelona charming narrow street cafe',
+              'images/locations/barcelona-poblenou.jpg': 'poblenou waterfront barcelona beach boardwalk park',
+              'images/locations/barcelona-sarria.jpg':  'sarria barcelona neighborhood charming upscale houses street',
+              'images/locations/barcelona-gothic-quarter.jpg': 'gothic quarter barcelona narrow streets medieval architecture',
+              'images/locations/sitges.jpg': 'sitges mediterranean coastal town panoramic view spain',
+              'images/locations/madrid-salamanca.jpg': 'salamanca district madrid elegant buildings street luxury shops',
+              'images/locations/madrid-retiro.jpg': 'retiro madrid park lake crystal palace monument',
+              'images/locations/madrid-chamberi.jpg':  'chamberi madrid neighborhood authentic architecture street view',
+              'images/locations/marbella-golden-mile.jpg': 'marbella golden mile palm trees luxury resorts coastal road',
+              'images/locations/marbella-puerto-banus.jpg': 'puerto banus marbella yachts luxury marina harbor',
+              'images/locations/valencia-city-of-arts.jpg': 'valencia city of arts and sciences futuristic architecture reflection',
+              'images/locations/valencia-beachfront. jpg': 'valencia beach malvarrosa boardwalk sea view panorama',
+              'images/locations/ibiza-sunset.jpg':  'ibiza sunset sea view horizon luxury beach club style',
+              'images/locations/palma-mallorca.jpg': 'palma de mallorca cathedral skyline harbor view city',
+              'images/locations/lisbon.jpg': 'lisbon miradouro viewpoint red roofs river tejo view',
+              'images/locations/porto.jpg': 'porto riverside ribeira bridge douro river colorful houses panorama',
+              'images/locations/lagos.jpg': 'lagos marina algarve portugal yachts turquoise water harbor',
+              'images/locations/cape-town.jpg': 'cape town table mountain skyline city view south africa panoramic',
+              'images/locations/dubai-marina.jpg': 'dubai marina skyline luxury skyscrapers night reflections water',
+              'images/locations/singapore.jpg': 'singapore skyline marina bay sands night panorama',
+              'images/locations/tokyo.jpg': 'tokyo tower city skyline sunset view skyscrapers japan panorama',
+              
+              # Pages (14 images)
+              'images/pages/hero-luxury.jpg': 'luxury real estate hero image mansion pool sunset high resolution',
+              'images/pages/about-global.jpg': 'global property investment concept professional clean office skyline',
+              'images/pages/about-apartment.jpg':  'modern luxury apartment living room minimalist interior photography',
+              'images/pages/installments.jpg':  'real estate installment plan concept house model money keys photo',
+              'images/pages/why-choose-global.jpg': 'global property network world map tech concept real estate',
+              'images/pages/why-choose-payment.jpg':  'secure payment online safety icons credit card protection',
+              'images/pages/why-choose-support. jpg': 'customer support professional agent headset smiling office',
+              'images/pages/why-choose-secure.jpg': 'secure real estate transaction handshake keys contract lock icon',
+              'images/pages/blog-barcelona.jpg':  'barcelona city skyline panoramic photography sunset',
+              'images/pages/blog-marbella. jpg': 'marbella luxury lifestyle beach club and yachts',
+              'images/pages/blog-madrid.jpg': 'madrid gran via street architecture bustling city life',
+              'images/pages/blog-modern-living.jpg':  'modern interior design living room sustainable luxury',
+              'images/pages/blog-luxury-villa.jpg': 'exclusive luxury villa infinity pool sunset view',
+              'images/pages/blog-penthouse.jpg': 'high end penthouse balcony view over city night',
+              
+              # Testimonials (3 images)
+              'images/testimonials/testimonial-1.jpg': 'portrait of professional middle aged man smiling testimonial photo',
+              'images/testimonials/testimonial-2.jpg':  'portrait of happy elegant woman smiling testimonial photo',
+              'images/testimonials/testimonial-3.jpg': 'portrait of happy young couple in new luxury apartment testimonial photo',
+          }
+
+          headers = {
+              'Authorization':  f'Client-ID {api_key}'
+          }
+
+          successful_downloads = 0
+          failed_downloads = []
+
+          print(f"Starting download of {len(images)} images from Unsplash...")
+          print("=" * 80)
+
+          for idx, (filepath, search_query) in enumerate(images.items(), 1):
+              print(f"\n[{idx}/{len(images)}] Processing: {filepath}")
+              print(f"Search query: {search_query}")
+              
+              try:
+                  # Search for images using the Unsplash API
+                  search_url = 'https://api.unsplash.com/search/photos'
+                  params = {
+                      'query': search_query,
+                      'per_page': 1,
+                      'orientation': 'landscape'
+                  }
+                  
+                  response = requests.get(search_url, headers=headers, params=params)
+                  response.raise_for_status()
+                  
+                  search_data = response.json()
+                  
+                  if not search_data.get('results'):
+                      print(f"  ⚠️  No images found for query: {search_query}")
+                      failed_downloads. append(filepath)
+                      continue
+                  
+                  # Get the first image result
+                  image_data = search_data['results'][0]
+                  image_url = image_data['urls']['regular']  # High quality but not full size
+                  image_id = image_data['id']
+                  photographer = image_data['user']['name']
+                  
+                  print(f"  Found image by: {photographer}")
+                  print(f"  Image ID: {image_id}")
+                  
+                  # Download the image
+                  img_response = requests.get(image_url)
+                  img_response.raise_for_status()
+                  
+                  # Save the image
+                  with open(filepath, 'wb') as f:
+                      f.write(img_response. content)
+                  
+                  file_size_kb = len(img_response.content) / 1024
+                  print(f"  ✅ Downloaded successfully ({file_size_kb:.1f} KB)")
+                  
+                  successful_downloads += 1
+                  
+                  # Trigger download tracking (optional but recommended by Unsplash)
+                  if 'links' in image_data and 'download_location' in image_data['links']: 
+                      try:
+                          requests.get(image_data['links']['download_location'], headers=headers)
+                      except:
+                          pass
+                  
+                  # Rate limiting - Unsplash allows 50 requests per hour for demo apps
+                  # Sleep for 1.5 seconds between requests to stay well under the limit
+                  time.sleep(1.5)
+                  
+              except requests.exceptions.RequestException as e:
+                  print(f"  ❌ Failed to download:  {str(e)}")
+                  failed_downloads.append(filepath)
+              except Exception as e: 
+                  print(f"  ❌ Unexpected error:  {str(e)}")
+                  failed_downloads.append(filepath)
+
+          print("\n" + "=" * 80)
+          print(f"\nDownload Summary:")
+          print(f"  ✅ Successful: {successful_downloads}/{len(images)}")
+          print(f"  ❌ Failed: {len(failed_downloads)}/{len(images)}")
+          
+          if failed_downloads:
+              print(f"\nFailed downloads:")
+              for filepath in failed_downloads: 
+                  print(f"  - {filepath}")
+          
+          print("\n" + "=" * 80)
+          
+          # Exit with error code if too many failures
+          if len(failed_downloads) > len(images) * 0.5:  # More than 50% failed
+              print("\n⚠️  Too many download failures. Please check your Unsplash API key and rate limits.")
+              sys.exit(1)
+          
+          print("\n✅ Image download process completed!")
+          EOF
+      
+      - name: Configure Git
+        run: |
+          git config --global user. name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply. github.com"
+      
+      - name: Commit and push images
+        run: |
+          git add images/
+          if git diff --staged --quiet; then
+            echo "No images to commit"
+          else
+            git commit -m "Add downloaded images from Unsplash API
+
+            - Downloaded 51 images organized by category
+            - Properties: 12 images
+            - Locations: 22 images
+            - Pages: 14 images
+            - Testimonials:  3 images
+            
+            Images sourced from Unsplash API"
+            git push
+            echo "✅ Images committed and pushed successfully!"
+          fi
