@@ -57,7 +57,7 @@ export default function PropertyDetailsPage() {
         const json = await resp.json();
         if (resp.ok && json.ok) {
           toast.success(t('contact.success'));
-          setFormData({ name: '', email: '', message: '' });
+          setFormData({ name:  '', email: '', message: '' });
         } else {
           console.error('Email API error', json);
           toast.error('Failed to send message.');
@@ -67,8 +67,6 @@ export default function PropertyDetailsPage() {
         toast.error('Failed to send message.');
       }
     })();
-  };
-
   };
 
   return (
@@ -113,7 +111,7 @@ export default function PropertyDetailsPage() {
                       </span>
                     )}
                   </div>
-                  <h1 className="mb-3">{property.title}</h1>
+                  <h1 className="mb-3">{property. title}</h1>
                   <div className="flex items-center space-x-2 text-gray-600 mb-4">
                     <MapPin className="w-5 h-5" />
                     <span>{property.location}</span>
@@ -156,7 +154,7 @@ export default function PropertyDetailsPage() {
                 <div className="mb-8">
                   <h3 className="mb-4">Features & Amenities</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {property.features.map((feature, index) => (
+                    {property.features. map((feature, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <Check className="w-5 h-5 text-luxury-gold flex-shrink-0" />
                         <span className="text-gray-700">{feature}</span>
@@ -187,7 +185,7 @@ export default function PropertyDetailsPage() {
                 {/* Installment Options */}
                 <div className="mb-8">
                   <h3 className="mb-4">Installment Options</h3>
-                  <p className="text-gray-600 mb-3">Installment plans available. Terms and conditions apply.</p>
+                  <p className="text-gray-600 mb-3">Installment plans available.  Terms and conditions apply.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {(property.installmentOptions || [6,12,24]).map((m) => {
                       const downPayment = Math.round(property.price * 0.2);
@@ -196,7 +194,7 @@ export default function PropertyDetailsPage() {
                         <div key={m} className="bg-luxury-gray-light p-4 rounded">
                           <div className="text-sm text-gray-500">{m} months</div>
                           <div className="text-xl text-luxury-gold mt-2">€{monthly.toLocaleString()}/mo</div>
-                          <div className="text-sm text-gray-600 mt-2">Example down payment: €{downPayment.toLocaleString()}</div>
+                          <div className="text-sm text-gray-600 mt-2">Example down payment: €{downPayment. toLocaleString()}</div>
                         </div>
                       );
                     })}
@@ -242,7 +240,7 @@ export default function PropertyDetailsPage() {
                         placeholder={t('contact.message')}
                         rows={5}
                         value={formData.message}
-                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        onChange={(e) => setFormData({ ... formData, message: e.target.value })}
                         required
                       />
                     </div>
@@ -264,19 +262,19 @@ export default function PropertyDetailsPage() {
                               body: JSON.stringify({
                                 name: consultData.name,
                                 email: consultData.email,
-                                subject: `Consultation request: ${property.title}`,
-                                message: `Preferred date/time: ${consultData.preferredDate}\n\nMessage:\n${consultData.message}`,
+                                subject: `Consultation request:  ${property.title}`,
+                                message: `Preferred date/time: ${consultData. preferredDate}\n\nMessage:\n${consultData.message}`,
                               }),
                             });
                             const json = await resp.json();
                             if (resp.ok && json.ok) {
                               toast.success(t('contact.success'));
-                              setConsultData({ name: '', email: '', preferredDate: '', message: '' });
+                              setConsultData({ name: '', email:  '', preferredDate: '', message: '' });
                             } else {
                               toast.error('Failed to send consultation request.');
                             }
                           } catch (err) {
-                            console.error(err);
+                            console. error(err);
                             toast.error('Failed to send consultation request.');
                           }
                         })();
@@ -284,9 +282,9 @@ export default function PropertyDetailsPage() {
                       className="space-y-3"
                     >
                       <Input placeholder="Full name" value={consultData.name} onChange={(e) => setConsultData({ ...consultData, name: e.target.value })} required />
-                      <Input placeholder="Email address" type="email" value={consultData.email} onChange={(e) => setConsultData({ ...consultData, email: e.target.value })} required />
+                      <Input placeholder="Email address" type="email" value={consultData.email} onChange={(e) => setConsultData({ ...consultData, email: e.target. value })} required />
                       <Input placeholder="Preferred date/time" value={consultData.preferredDate} onChange={(e) => setConsultData({ ...consultData, preferredDate: e.target.value })} />
-                      <Textarea placeholder="Message (optional)" rows={3} value={consultData.message} onChange={(e) => setConsultData({ ...consultData, message: e.target.value })} />
+                      <Textarea placeholder="Message (optional)" rows={3} value={consultData. message} onChange={(e) => setConsultData({ ...consultData, message: e.target.value })} />
                       <Button type="submit" className="w-full bg-luxury-gold hover:bg-luxury-gold-dark text-white">Book Consultation</Button>
                     </form>
                   </div>
@@ -305,4 +303,4 @@ export default function PropertyDetailsPage() {
       </section>
     </div>
   );
-
+}
